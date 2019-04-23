@@ -2,7 +2,8 @@
 #include "Player.h"
 #include "TextureHolder.h"
 
-Player::Player()
+Player::Player(Vector2u resolution) :
+	_weapon()
 {
 	_speed = START_SPEED;
 	_currentHealth = START_HEALTH;
@@ -10,13 +11,14 @@ Player::Player()
 
 	_sprite = Sprite(TextureHolder::GetTexture("graphics/player.png"));
 	_sprite.setOrigin(25, 25);
+	_resolution = resolution;
 }
 
 Player::~Player()
 {
 }
 
-void Player::spawn(FloatRect arena, Vector2f resolution, int tileSize)
+void Player::spawn(FloatRect arena, Vector2u resolution, int tileSize)
 {
 	_position.x = arena.width / 2.f;
 	_position.y = arena.height / 2.f;
@@ -36,6 +38,12 @@ void Player::resetPlayerStats()
 	_speed = START_SPEED;
 	_currentHealth = START_HEALTH;
 	_maxHealth = START_HEALTH;
+
+	_weapon.currentBullet = 0;
+	_weapon.bulletsRemaining = SPARE_MAGAZINES * MAGAZINE_SIZE;
+	_weapon.magazineSize = MAGAZINE_SIZE;
+	_weapon.bulletsInMagazine = MAGAZINE_SIZE;
+	_weapon.rateOfFire = 1;
 }
 
 bool Player::hit(Time timeHit)
@@ -169,4 +177,54 @@ void Player::increaseHealthLevel(float amount)
 float Player::getHealth()
 {
 	return _currentHealth;
+}
+
+unsigned int Player::getCurrentBullet()
+{
+	return _weapon.currentBullet;
+}
+
+unsigned int Player::getRemainingBullets()
+{
+	return _weapon.bulletsRemaining;
+}
+
+unsigned int Player::getMagazineSize()
+{
+	return _weapon.magazineSize;
+}
+
+unsigned int Player::getBulletsInMagazine()
+{
+	return _weapon.bulletsInMagazine;
+}
+
+float Player::getRateOfFire()
+{
+	return _weapon.rateOfFire;
+}
+
+void Player::setCurrentBullet(unsigned int currentBullet)
+{
+	_weapon.currentBullet = currentBullet;
+}
+
+void Player::setRemainingBullets(unsigned int bulletsRemaining)
+{
+	_weapon.bulletsRemaining = bulletsRemaining;
+}
+
+void Player::setMagazineSize(unsigned int magazineSize)
+{
+	_weapon.magazineSize = magazineSize;
+}
+
+void Player::setBulletsInMagazine(unsigned int bulletsInMagazine)
+{
+	_weapon.bulletsInMagazine = bulletsInMagazine;
+}
+
+void Player::setRateOfFire(float rateOfFire)
+{
+	_weapon.rateOfFire = rateOfFire;
 }
