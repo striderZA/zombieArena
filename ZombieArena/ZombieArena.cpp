@@ -273,6 +273,7 @@ int main()
 		// Handle events
 		Event event;
 
+		// handle inputs
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::KeyPressed)
@@ -459,6 +460,7 @@ int main()
 			}
 		}
 
+		// update game variables
 		if (state == State::PLAYING)
 		{
 			
@@ -563,18 +565,20 @@ int main()
 
 			healthBar.setSize(Vector2f(player.getHealth() * 3, 50));
 			frameSinceLastHudUpdate++;
+			
+			// update ammo text separately, to prevent delays
+			stringstream ssAmmo;
+
+			ssAmmo << bulletsInClip << "/" << bulletsSpare;
+			ammoText.setString(ssAmmo.str());
 
 			if (frameSinceLastHudUpdate > fpsMeasureFrameInterval)
 			{
-				// time to update the HUD
-				stringstream ssAmmo;
+				// time to update the HUD				
 				stringstream ssScore;
 				stringstream ssHiScore;
 				stringstream ssWave;
-				stringstream ssremainingZombiesText;
-
-				ssAmmo << bulletsInClip << "/" << bulletsSpare;
-				ammoText.setString(ssAmmo.str());
+				stringstream ssremainingZombiesText;				
 
 				ssScore << "Score: " << score;
 				scoreText.setString(ssScore.str());

@@ -7,12 +7,12 @@
 
 using namespace std;
 
-#define DEBUG 0
+#define ZOMBIE_DEBUG 0
 
-#if DEBUG
-#define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#if ZOMBIE_DEBUG
+#define ZOMBIE_DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else
-#define DEBUG_PRINT(...)
+#define ZOMBIE_DEBUG_PRINT(...)
 #endif
 
 Zombie::Zombie()
@@ -67,7 +67,7 @@ void Zombie::spawn(float startX, float startY, int type, int seed)
 
 	srand((int)time(0) * seed);
 
-	float modifier = (rand() % MAX_VARIANCE) + OFFSET;
+	float modifier = (float)(rand() % MAX_VARIANCE) + OFFSET;
 	modifier /= 100;
 	_speed *= modifier;
 	_position.x = startX;
@@ -113,19 +113,19 @@ void Zombie::upgradeSpeed(int type, int waveNumber)
 	switch (type)
 	{
 	case 0: // bloater
-		_speed += BLOATER_SPEED*(0.05*waveNumber);
+		_speed += BLOATER_SPEED*(0.05*(float)waveNumber);
 		break;
 	case 1: // chaser
-		_speed += CHASER_SPEED*(0.05*waveNumber);
+		_speed += CHASER_SPEED*(0.05*(float)waveNumber);
 		break;
 	case 2: // crawler
-		_speed += CRAWLER_SPEED* (0.05*waveNumber);
+		_speed += CRAWLER_SPEED* (0.05*(float)waveNumber);
 		break;
 	default:
 		break;
 	}
 
-	DEBUG_PRINT("Increasing speed to: %.2f\n", _speed);
+	ZOMBIE_DEBUG_PRINT("Increasing speed to: %.2f\n", _speed);
 }
 
 void Zombie::upgradeHealth(int type)
