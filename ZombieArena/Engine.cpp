@@ -219,83 +219,83 @@ void Engine::update(float dtAsSeconds)
 	Vector2f playerPosition(_player->getCenter());
 	_mainView.setCenter(playerPosition);
 
-	for (int i = 0; i < _numZombies; ++i)
-	{
-		if (_zombies[i].isAlive())
-		{
-			_zombies[i].update(dtAsSeconds, playerPosition);
-		}
-	}
+	//for (int i = 0; i < _numZombies; ++i)
+	//{
+	//	if (_zombies[i].isAlive())
+	//	{
+	//		_zombies[i].update(dtAsSeconds, playerPosition);
+	//	}
+	//}
 
-	for (int i = 0; i < 100; ++i)
-	{
-		if (_player->_bullets[i].isInFlight())
-		{
-			_player->_bullets[i].update(dtAsSeconds);
-		}
-	}
+	//for (int i = 0; i < 100; ++i)
+	//{
+	//	if (_player->_bullets[i].isInFlight())
+	//	{
+	//		_player->_bullets[i].update(dtAsSeconds);
+	//	}
+	//}
 
-	_healthPickup->update(dtAsSeconds);
-	_ammoPickup->update(dtAsSeconds);
+	//_healthPickup->update(dtAsSeconds);
+	//_ammoPickup->update(dtAsSeconds);
 
-	for (int i = 0; i < 100; ++i)
-	{
-		for (int j = 0; j < _numZombies; ++j)
-		{
-			if (_player->_bullets[i].isInFlight() && _zombies[j].isAlive())
-			{
-				if (_player->_bullets[i].getPosition().intersects(_zombies[j].getPosition()))
-				{
-					_player->_bullets[i].stop();
-					if (_zombies[j].hit())
-					{
-						_score += 10;
-						if (_score > _hiScore)
-						{
-							_hiScore = _score;
-						}
-						_numZombiesAlive--;
-						if (_numZombiesAlive == 0)
-						{
-							_state = State::LEVELING_UP;
-						}
-					}
-					//play splat sound
-				}
-			}
-		}
-	}
+	//for (int i = 0; i < 100; ++i)
+	//{
+	//	for (int j = 0; j < _numZombies; ++j)
+	//	{
+	//		if (_player->_bullets[i].isInFlight() && _zombies[j].isAlive())
+	//		{
+	//			if (_player->_bullets[i].getPosition().intersects(_zombies[j].getPosition()))
+	//			{
+	//				_player->_bullets[i].stop();
+	//				if (_zombies[j].hit())
+	//				{
+	//					_score += 10;
+	//					if (_score > _hiScore)
+	//					{
+	//						_hiScore = _score;
+	//					}
+	//					_numZombiesAlive--;
+	//					if (_numZombiesAlive == 0)
+	//					{
+	//						_state = State::LEVELING_UP;
+	//					}
+	//				}
+	//				//play splat sound
+	//			}
+	//		}
+	//	}
+	//}
 
-	for (int i = 0; i < _numZombies; ++i)
-	{
-		if (_player->getPosition().intersects(_zombies[i].getPosition()) && _zombies[i].isAlive())
-		{
-			if (_player->hit(_gameTimeTotal))
-			{
-				// play hit sound
-			}
-			if (_player->getHealth() <= 0)
-			{
-				// play death sound
-				_state = State::GAME_OVER;
-				ofstream outputFile("gamedata/scores.txt");
-				outputFile << _hiScore;
-				outputFile.close();
-			}
-		}
-	}
+	//for (int i = 0; i < _numZombies; ++i)
+	//{
+	//	if (_player->getPosition().intersects(_zombies[i].getPosition()) && _zombies[i].isAlive())
+	//	{
+	//		if (_player->hit(_gameTimeTotal))
+	//		{
+	//			// play hit sound
+	//		}
+	//		if (_player->getHealth() <= 0)
+	//		{
+	//			// play death sound
+	//			_state = State::GAME_OVER;
+	//			ofstream outputFile("gamedata/scores.txt");
+	//			outputFile << _hiScore;
+	//			outputFile.close();
+	//		}
+	//	}
+	//}
 
-	if (_player->getPosition().intersects(_healthPickup->getPosition()) && _healthPickup->isSpawned())
-	{
-		_player->increaseHealthLevel(_healthPickup->gotIt());
-		// play health pack sound
-	}
+	//if (_player->getPosition().intersects(_healthPickup->getPosition()) && _healthPickup->isSpawned())
+	//{
+	//	_player->increaseHealthLevel(_healthPickup->gotIt());
+	//	// play health pack sound
+	//}
 
-	if (_player->getPosition().intersects(_ammoPickup->getPosition()) && _ammoPickup->isSpawned())
-	{
-		_player->setRemainingBullets(_ammoPickup->gotIt() + _player->getRemainingBullets());
-		// play reload sound
-	}
+	//if (_player->getPosition().intersects(_ammoPickup->getPosition()) && _ammoPickup->isSpawned())
+	//{
+	//	_player->setRemainingBullets(_ammoPickup->gotIt() + _player->getRemainingBullets());
+	//	// play reload sound
+	//}
 
 }
 
@@ -306,6 +306,15 @@ void Engine::draw()
 		_window.clear();
 		_window.setView(_mainView);
 		_window.draw(_background, &_backgroundTexture);
+
+		_window.draw(_player->getSprite());
+		// draw the HUD
+		_window.setView(_hudView);
+		_window.draw(_hud.getAmmoText());
+		_window.draw(_hud.getScoreText());
+		_window.draw(_hud.getHiScoreText());
+		_window.draw(_hud.getWaveNumberText());
+		_window.draw(_hud.getRemainingZombiesText());
 	}
 
 	if (_state == State::LEVELING_UP)
@@ -333,7 +342,7 @@ void Engine::run()
 		float dtAsSeconds = dt.asSeconds();
 
 		handleInput();
-		//update(dtAsSeconds);
+		update(dtAsSeconds);
 		draw();
 	}
 }
