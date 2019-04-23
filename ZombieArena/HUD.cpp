@@ -34,9 +34,7 @@ HUD::HUD()
 	initializeText(_remainingZombiesText, DEFAULT_TEXT_SIZE, "", textPosition);
 	initializeText(_waveNumberText, DEFAULT_TEXT_SIZE, "", textPosition);
 
-	_healthBar.setFillColor(Color::Red);
-
-	
+	_healthBar.setFillColor(Color::Red);	
 }
 
 HUD::~HUD()
