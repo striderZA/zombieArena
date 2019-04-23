@@ -113,13 +113,13 @@ void Zombie::upgradeSpeed(int type, int waveNumber)
 	switch (type)
 	{
 	case 0: // bloater
-		_speed += BLOATER_SPEED*(0.05*waveNumber);
+		_speed += BLOATER_SPEED*(0.1*waveNumber);
 		break;
 	case 1: // chaser
-		_speed += CHASER_SPEED*(0.05*waveNumber);
+		_speed += CHASER_SPEED*(0.1*waveNumber);
 		break;
 	case 2: // crawler
-		_speed += CRAWLER_SPEED* (0.05*waveNumber);
+		_speed += CRAWLER_SPEED* (0.1*waveNumber);
 		break;
 	default:
 		break;

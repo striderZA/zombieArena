@@ -17,7 +17,7 @@ private:
 	const float CHASER_HEALTH = 2;
 	const float CRAWLER_HEALTH = 4;
 
-	const int MAX_VARIANCE = 30;
+	const int MAX_VARIANCE = 10;
 	const int OFFSET = 101 - MAX_VARIANCE;
 
 	Vector2f _position;
