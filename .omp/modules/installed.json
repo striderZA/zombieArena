@@ -1,0 +1,130 @@
+{
+  "core": {
+    "version": "0.6.0",
+    "status": "installed",
+    "timestamp": "2026-11-21T13:19:22.485Z",
+    "files": [
+      {
+        "source": "agents/creative-director.md",
+        "target": ".omp/agents/creative-director.md"
+      },
+      {
+        "source": "agents/producer.md",
+        "target": ".omp/agents/producer.md"
+      },
+      {
+        "source": "agents/technical-director.md",
+        "target": ".omp/agents/technical-director.md"
+      }
+    ],
+    "mcpByHarness": {
+      "omp": []
+    }
+  },
+  "engine-raylib": {
+    "version": "0.6.0",
+    "status": "installed",
+    "timestamp": "2026-11-21T13:19:22.490Z",
+    "files": [
+      {
+        "source": "agents/raylib-specialist.md",
+        "target": ".omp/agents/raylib-specialist.md"
+      }
+    ],
+    "mcpByHarness": {
+      "omp": []
+    }
+  },
+  "programming": {
+    "version": "0.6.0",
+    "status": "installed",
+    "timestamp": "2026-11-21T13:19:22.501Z",
+    "files": [
+      {
+        "source": "agents/ai-programmer.md",
+        "target": ".omp/agents/ai-programmer.md"
+      },
+      {
+        "source": "agents/engine-programmer.md",
+        "target": ".omp/agents/engine-programmer.md"
+      },
+      {
+        "source": "agents/gameplay-programmer.md",
+        "target": ".omp/agents/gameplay-programmer.md"
+      },
+      {
+        "source": "agents/network-programmer.md",
+        "target": ".omp/agents/network-programmer.md"
+      },
+      {
+        "source": "agents/tools-programmer.md",
+        "target": ".omp/agents/tools-programmer.md"
+      }
+    ],
+    "mcpByHarness": {
+      "omp": []
+    }
+  },
+  "qa": {
+    "version": "0.6.0",
+    "status": "installed",
+    "timestamp": "2026-11-21T13:19:22.524Z",
+    "files": [
+      {
+        "source": "agents/performance-analyst.md",
+        "target": ".omp/agents/performance-analyst.md"
+      },
+      {
+        "source": "agents/qa-lead.md",
+        "target": ".omp/agents/qa-lead.md"
+      },
+      {
+        "source": "agents/qa-tester.md",
+        "target": ".omp/agents/qa-tester.md"
+      },
+      {
+        "source": "agents/security-engineer.md",
+        "target": ".omp/agents/security-engineer.md"
+      }
+    ],
+    "mcpByHarness": {
+      "omp": []
+    }
+  },
+  "design": {
+    "version": "0.6.0",
+    "status": "installed",
+    "timestamp": "2026-11-21T13:19:22.537Z",
+    "files": [
+      {
+        "source": "agents/economy-designer.md",
+        "target": ".omp/agents/economy-designer.md"
+      },
+      {
+        "source": "agents/game-designer.md",
+        "target": ".omp/agents/game-designer.md"
+      },
+      {
+        "source": "agents/systems-designer.md",
+        "target": ".omp/agents/systems-designer.md"
+      }
+    ],
+    "mcpByHarness": {
+      "omp": []
+    }
+  },
+  "architecture": {
+    "version": "0.6.0",
+    "status": "installed",
+    "timestamp": "2026-11-21T13:19:22.542Z",
+    "files": [
+      {
+        "source": "agents/lead-programmer.md",
+        "target": ".omp/agents/lead-programmer.md"
+      }
+    ],
+    "mcpByHarness": {
+      "omp": []
+    }
+  }
+}
