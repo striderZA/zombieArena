@@ -1,8 +1,8 @@
 # Zombie Arena
 
-> A raylib 2D top-down wave shooter: four weapons, seven enemy types, randomized
-> upgrade drafts, persistent scrap, local co-op, gamepad support, and a boss
-> every five waves.
+> A raylib 2D top-down wave shooter: four weapons, arena cover, seven enemy
+> types with elite variants, randomized upgrade drafts, persistent scrap, local
+> co-op, gamepad support, and a boss every five waves.
 
 Built with **C++17 + raylib 6.2** and organized with
 [OpenCode Game Studios](https://github.com/striderZA/OpenCodeGameStudios).

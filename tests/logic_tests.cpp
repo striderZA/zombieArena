@@ -1,6 +1,7 @@
 #include "Arena.h"
 #include "Bullet.h"
 #include "Meta.h"
+#include "ObstacleCollision.h"
 #include "Pickup.h"
 #include "Player.h"
 #include "Rng.h"
@@ -514,6 +515,148 @@ void TestSettings()
     CHECK(std::strcmp(KeyName(KEY_NINE), "9") == 0);
 }
 
+void TestObstacleCollision()
+{
+    const Rectangle wall{100.0f, 100.0f, 50.0f, 50.0f};
+
+    Vector2 touching{80.0f, 120.0f};
+    CHECK(CircleOverlapsRect(touching, 21.0f, wall));
+    CHECK(ResolveCircleVsRect(touching, 20.0f, wall));
+    CHECK_NEAR(touching.x, 80.0f, 0.001f);
+    CHECK_NEAR(touching.y, 120.0f, 0.001f);
+    CHECK(!CircleOverlapsRect(touching, 20.0f, wall));
+
+    Vector2 inside{120.0f, 125.0f};
+    CHECK(ResolveCircleVsRect(inside, 20.0f, wall));
+    CHECK(!CircleOverlapsRect(inside, 20.0f, wall));
+
+    Vector2 clear{10.0f, 10.0f};
+    CHECK(!ResolveCircleVsRect(clear, 20.0f, wall));
+    CHECK(!CircleBlockedByObstacles(clear, 20.0f, {wall}));
+
+    const std::vector<Rectangle> obstacles{wall, Rectangle{60.0f, 170.0f, 50.0f, 40.0f}};
+    Vector2 corner{95.0f, 165.0f};
+    for (int i = 0; i < 4; ++i)
+        ResolveCircleAgainstObstacles(corner, 20.0f, obstacles);
+    CHECK(!CircleBlockedByObstacles(corner, 20.0f, obstacles));
+
+    // A fast segment crosses the wall even though its endpoint is far past it.
+    float t = -1.0f;
+    CHECK(SegmentIntersectsRect({0.0f, 125.0f}, {300.0f, 125.0f}, wall, &t));
+    CHECK_NEAR(t, 1.0f / 3.0f, 0.001f);
+}
+
+void TestArenaObstacles()
+{
+    Arena first;
+    first.SetWave(1, 1234);
+    CHECK(first.Obstacles().size() >= 2);
+
+    Arena repeat;
+    repeat.SetWave(1, 1234);
+    CHECK(repeat.Obstacles().size() == first.Obstacles().size());
+
+    const float center = first.Size() * 0.5f;
+    for (std::size_t i = 0; i < first.Obstacles().size(); ++i)
+    {
+        const Rectangle &rect = first.Obstacles()[i];
+        CHECK(rect.width >= 50.0f && rect.height >= 50.0f);
+        CHECK(rect.x >= 100.0f && rect.y >= 100.0f);
+        CHECK(rect.x + rect.width <= first.Size() - 100.0f);
+        CHECK(rect.y + rect.height <= first.Size() - 100.0f);
+        CHECK(!CircleOverlapsRect({center, center}, 160.0f, rect));
+
+        if (i < repeat.Obstacles().size())
+        {
+            const Rectangle &copy = repeat.Obstacles()[i];
+            CHECK_NEAR(rect.x, copy.x, 0.001f);
+            CHECK_NEAR(rect.y, copy.y, 0.001f);
+        }
+
+        for (std::size_t j = i + 1; j < first.Obstacles().size(); ++j)
+            CHECK(!CheckCollisionRecs(rect, first.Obstacles()[j]));
+    }
+
+    Arena later;
+    later.SetWave(10, 1234);
+    CHECK(later.Obstacles().size() >= first.Obstacles().size());
+    CHECK(later.Obstacles().size() <= 6);
+
+    Arena rest;
+    rest.SetWave(0, 1234);
+    CHECK(rest.Obstacles().empty());
+}
+
+void TestCoverMovers()
+{
+    const std::vector<Rectangle> obstacles{{400.0f, 300.0f, 50.0f, 100.0f}};
+
+    Player player;
+    player.Spawn({0.0f, 0.0f, 650.0f, 650.0f}, 50.0f);
+    for (int i = 0; i < 20; ++i)
+        player.Update(0.05f, {1.0f, 0.0f}, {325.0f, 325.0f}, &obstacles);
+    CHECK_NEAR(player.Center().x, 400.0f - Player::kBodyRadius, 0.01f);
+    CHECK(!CircleOverlapsRect(player.Center(), Player::kBodyRadius, obstacles[0]));
+
+    const float beforeY = player.Center().y;
+    player.Update(1.0f, {0.0f, 1.0f}, {325.0f, 325.0f}, &obstacles);
+    CHECK(player.Center().y > beforeY + 100.0f);
+
+    const std::vector<Rectangle> wall{{200.0f, 0.0f, 50.0f, 650.0f}};
+    Zombie zombie;
+    zombie.Spawn(ZombieType::Chaser, {100.0f, 325.0f}, Texture2D{}, Texture2D{}, 70.0f, 1);
+    for (int i = 0; i < 600; ++i)
+        zombie.Update(1.0f / 60.0f, {400.0f, 325.0f}, &wall);
+
+    CHECK(zombie.Position().x <= 200.0f - zombie.Radius() + 0.01f);
+    CHECK(!CircleOverlapsRect(zombie.Position(), zombie.Radius(), wall[0]));
+
+    Zombie ranged;
+    ranged.Spawn(ZombieType::Spitter, {100.0f, 325.0f}, Texture2D{}, Texture2D{}, 30.0f, 2);
+    for (int i = 0; i < 600; ++i)
+        ranged.Update(1.0f / 60.0f, {400.0f, 325.0f}, &wall);
+    CHECK(!CircleOverlapsRect(ranged.Position(), ranged.Radius(), wall[0]));
+}
+
+void TestEliteZombie()
+{
+    Zombie elite;
+    elite.Spawn(ZombieType::Chaser, {100.0f, 100.0f}, Texture2D{}, Texture2D{}, 70.0f, 1, true);
+    CHECK(elite.Elite());
+    CHECK(elite.Health() == 2);
+    CHECK(elite.MaxHealth() == 2);
+    CHECK_NEAR(elite.Scale(), 1.25f, 0.001f);
+    CHECK_NEAR(elite.Speed(), 70.0f * 1.15f, 0.001f);
+    CHECK_NEAR(elite.ContactDamage(), 15.0f, 0.001f);
+    CHECK(Zombie::ScoreValue(ZombieType::Chaser, true) == 30);
+    CHECK(Zombie::ScrapValue(ZombieType::Chaser, true) == 3);
+    CHECK(!elite.Hit(1));
+    CHECK(elite.Alive());
+    CHECK(!elite.Hit(1));
+    CHECK(elite.Alive());
+    CHECK(elite.Hit(1));
+    CHECK(!elite.Alive());
+
+    Zombie boss;
+    boss.Spawn(ZombieType::Boss, {100.0f, 100.0f}, Texture2D{}, Texture2D{}, 30.0f, 30, true);
+    CHECK(!boss.Elite());
+    CHECK(boss.Health() == 30);
+}
+
+void TestPickupCover()
+{
+    const std::vector<Rectangle> obstacles{{150.0f, 150.0f, 350.0f, 350.0f}};
+    Rng rng(7);
+
+    Pickup health(Pickup::Kind::Health);
+    health.SetObstacles(&obstacles);
+    health.SetArena({0.0f, 0.0f, 650.0f, 650.0f}, rng);
+    CHECK(!CircleBlockedByObstacles(health.Position(), 26.0f, obstacles));
+
+    health.ForceSpawn({300.0f, 300.0f});
+    CHECK(!CircleBlockedByObstacles(health.Position(), 26.0f, obstacles));
+}
+
 void TestPlayerHealth()
 {
     Player player;
@@ -561,6 +704,11 @@ int main()
     TestMeta();
     TestSettings();
     TestPlayerHealth();
+    TestObstacleCollision();
+    TestArenaObstacles();
+    TestCoverMovers();
+    TestEliteZombie();
+    TestPickupCover();
 
     std::printf("logic tests: %d passed, %d failed\n", gChecks - gFailures, gFailures);
     return gFailures == 0 ? 0 : 1;

@@ -5,9 +5,9 @@ Programming*. The original SFML reference project was removed when the repo
 adopted the OCGS layout; it remains in git history. All paths below are
 relative to the repository root.
 
-Top-down wave shooter with four weapons, seven enemy types including a boss,
-randomized upgrade drafts, persistent scrap and permanent upgrades, local
-two-player co-op, gamepad support, and a settings/bunker layer.
+Top-down wave shooter with four weapons, arena cover, seven enemy types plus
+elite variants, randomized upgrade drafts, persistent scrap and permanent
+upgrades, local two-player co-op, gamepad support, and a settings/bunker layer.
 
 ## Build
 
@@ -102,6 +102,12 @@ keyboard/mouse and player 2 uses the gamepad.
 - **Enemies** — bloater, chaser, crawler, ranged spitter, fast sprinter,
   exploder (death blast damages players), and a boss every five waves with a
   boss health bar, large hitbox, heavy knockback resistance and bonus rewards.
+  From wave 4 each wave also includes elite zombies: 2x health, 1.15x speed,
+  1.25x size, 1.5x contact damage, triple score/scrap and a guaranteed pickup.
+- **Arena cover** — two to six static crates and barriers per wave, generated
+  deterministically from the run seed. Cover blocks players, zombies, bullets
+  and spitter projectiles; the player spawn stays clear. Zombies slide around
+  cover instead of pathing through it, and shots that hit cover raise a spark.
 - **Upgrade drafts** — three weighted cards per level-up from 11 upgrades plus a
   repair fallback; common/rare/epic rarity, stack caps, and effects on both
   players in co-op.
@@ -122,14 +128,15 @@ ctest --test-dir build --output-on-failure
 ```
 
 - `logic_tests` — window-free checks for weapon pools and unlocks, upgrade
-  math, zombie stats/attacks/bosses, wave composition, pickup timers, player
-  damage/revive/meta math, arena growth, profile and settings serialization, key
-  names and RNG.
+  math, zombie stats/attacks/bosses/elites, wave composition, pickup timers,
+  player damage/revive/meta math, arena growth and deterministic cover
+  placement, circle-vs-cover resolution, cover-blocked player/zombie movement,
+  profile and settings serialization, key names and RNG.
 - `smoke` — drives the real game loop: title → draft → weapon swaps and shotgun
   spread → wave 1 combat → pause/resume → wave clear → death/restart; settings,
   key rebinding and bunker purchases; two-player co-op movement/fire/death; and
-  a wave-5 quick start with boss, spitters and projectiles. It also checks every
-  captured screenshot contains rendered pixels.
+  a wave-5 quick start with boss, spitters, projectiles, arena cover and an
+  elite. It also checks every captured screenshot contains rendered pixels.
 
 ## Layout
 
@@ -138,10 +145,11 @@ src/
   main.cpp        window/input/gamepad/CLI
   Game.cpp        states, waves, co-op, meta, settings UI, HUD, audio
   Player.cpp      movement, aim, health, revive, meta scaling
-  Zombie.cpp      seven enemy types, behaviours, boss scaling
+  Zombie.cpp      seven enemy types, behaviours, elites and boss scaling
   Bullet.cpp      projectile pool with spread/damage
-  Pickup.cpp      timed health/ammo pickups, boss drops
-  Arena.cpp       tiled arena generated per wave
+  Pickup.cpp      timed health/ammo pickups, boss and elite drops
+  Arena.cpp       tiled arena and deterministic cover generated per wave
+  ObstacleCollision.h  circle-vs-cover resolution shared by every mover
   Waves.cpp       wave counts and weighted enemy composition
   Weapons.cpp     four weapons, ammo pools, unlocks and multipliers
   Upgrades.cpp    upgrade card table (rarity, weights, stack caps)
@@ -172,14 +180,19 @@ ammo/health values, 250 ms hit cooldown, 1000 px bullet range).
 - `graphics/background3.png` was actually JPEG data; it is stored as a real PNG
   because raylib selects its image decoder by file extension.
 - HUD scales with window height instead of fixed pixel positions.
+- Arena cover is new content, not a port: two to six deterministic crates and
+  barriers per wave block movement and shots, with the spawn area kept open.
+- Elite zombies are new content: from wave 4 one elite is guaranteed per wave
+  and later waves add random elites.
 
 ## Verification
 
-`ctest` result: 2/2 suites pass — **656 logic assertions** and **96 integration
+`ctest` result: 2/2 suites pass — **712 logic assertions** and **102 integration
 checks**. The smoke run includes a five-zombie wave-1 clear (score 50), wave-2
 death/restart, settings/keybinding and bunker/SMG purchase paths, a two-player
-co-op wave and double-down game over, and a wave-5 boss with spitters and live
-projectiles, plus a 0.1 s / 100 px swept bullet hit that endpoint-only
+co-op wave and double-down game over, and a wave-5 boss with spitters, live
+projectiles, arena cover and an elite zombie, plus a 0.1 s / 100 px swept
+bullet hit that endpoint-only
 collision misses. Windowed and fullscreen launches were also run directly.
 
 Gamepad input paths are exercised through scripted player-2 inputs; no physical

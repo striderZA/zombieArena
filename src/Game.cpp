@@ -512,6 +512,9 @@ void Game::BeginWave(int wave)
     wave_ = wave;
     arena_.SetWave(wave_, runSeed_);
 
+    healthPickup_.SetObstacles(&arena_.Obstacles());
+    ammoPickup_.SetObstacles(&arena_.Obstacles());
+
     for (int i = 0; i < playerCount_; ++i)
     {
         PlayerSlot &slot = players_[i];
@@ -540,8 +543,28 @@ void Game::BeginWave(int wave)
     const float maxX = arena_.Size() - 20.0f;
     const float maxY = arena_.Size() - 20.0f;
 
-    for (ZombieType type : composition)
+    bool eliteSpawned = false;
+    for (std::size_t index = 0; index < composition.size(); ++index)
     {
+        const ZombieType type = composition[index];
+
+        // From wave 4 every wave includes at least one elite; later waves add
+        // random elites on top, up to a 25% chance per zombie.
+        bool elite = false;
+        if (type != ZombieType::Boss && wave_ >= 4)
+        {
+            if (!eliteSpawned)
+            {
+                elite = true;
+                eliteSpawned = true;
+            }
+            else
+            {
+                const float chance = std::min(0.05f + 0.015f * static_cast<float>(wave_), 0.25f);
+                elite = spawnRng_.Range(0.0f, 1.0f) < chance;
+            }
+        }
+
         const int side = spawnRng_.RangeInt(0, 4);
         float x = 0.0f;
         float y = 0.0f;
@@ -572,7 +595,7 @@ void Game::BeginWave(int wave)
         const int health = Zombie::BaseHealth(type) + (type == ZombieType::Boss ? wave_ * 8 : 0);
 
         Zombie zombie;
-        zombie.Spawn(type, {x, y}, ZombieTexture(type), assets_.blood, speed, health);
+        zombie.Spawn(type, {x, y}, ZombieTexture(type), assets_.blood, speed, health, elite);
         zombies_.push_back(zombie);
     }
 
@@ -702,7 +725,7 @@ void Game::UpdatePlayer(int index, float dt, const PlayerInput &input)
     if (!slot.player.Alive())
         return;
 
-    slot.player.Update(dt, input.move, aim);
+    slot.player.Update(dt, input.move, aim, &arena_.Obstacles());
     HandleWeaponInput(index, input);
 
     if (input.reload)
@@ -801,7 +824,7 @@ void Game::UpdatePlaying(float dt, const InputState &input)
         float distance = 0.0f;
         NearestPlayerTarget(zombie.Position(), target, distance);
 
-        zombie.Update(dt, target);
+        zombie.Update(dt, target, &arena_.Obstacles());
 
         if (zombie.Alive() && zombie.Ranged() && distance < 520.0f && zombie.TickAttack(dt))
             SpawnEnemyShot(zombie.Position(), target);
@@ -840,6 +863,19 @@ void Game::UpdateEnemyShots(float dt)
                 updated.position.y < arena.y - 120.0f || updated.position.y > arena.y + arena.height + 120.0f)
             {
                 consumed = true;
+            }
+        }
+
+        if (!consumed)
+        {
+            for (const Rectangle &rect : arena_.Obstacles())
+            {
+                if (CheckCollisionCircleRec(updated.position, static_cast<float>(kEnemyShotRadius), rect))
+                {
+                    consumed = true;
+                    AddShockwave(updated.position, 10.0f, 0.16f, LIGHTGRAY);
+                    break;
+                }
             }
         }
 
@@ -916,6 +952,26 @@ void Game::UpdateCollisions()
             }
         }
 
+        // Cover blocks the shot at the nearest impact point along the path.
+        // A wall in front of a zombie wins the hit resolution.
+        float wallT = 2.0f;
+        for (const Rectangle &rect : arena_.Obstacles())
+        {
+            float t = 0.0f;
+            if (SegmentIntersectsRect(bullet.PreviousPosition(), bullet.Position(), rect, &t) && t < wallT)
+                wallT = t;
+        }
+
+        if (wallT < 2.0f && wallT <= nearestT)
+        {
+            bullet.Stop();
+            const Vector2 impact{
+                bullet.PreviousPosition().x + (bullet.Position().x - bullet.PreviousPosition().x) * wallT,
+                bullet.PreviousPosition().y + (bullet.Position().y - bullet.PreviousPosition().y) * wallT};
+            AddShockwave(impact, 9.0f, 0.16f, LIGHTGRAY);
+            continue;
+        }
+
         if (hit == nullptr)
             continue;
 
@@ -924,6 +980,7 @@ void Game::UpdateCollisions()
         const bool killed = hit->Hit(damage);
 
         hit->Knockback(bullet.Direction(), 5.0f + static_cast<float>(damage) * 2.0f);
+        hit->ResolveObstacles(arena_.Obstacles());
         hit->SetFlash(0.08f);
         AddDamageNumber(hit->Position(), damage);
         if (killed || combatRng_.Range(0.0f, 1.0f) < 0.30f)
@@ -934,10 +991,11 @@ void Game::UpdateCollisions()
         if (killed)
         {
             const ZombieType type = hit->Type();
-            score_ += Zombie::ScoreValue(type);
+            const bool elite = hit->Elite();
+            score_ += Zombie::ScoreValue(type, elite);
             if (score_ > hiScore_)
                 hiScore_ = score_;
-            AwardScrap(Zombie::ScrapValue(type));
+            AwardScrap(Zombie::ScrapValue(type, elite));
             ++runKills_;
 
             for (int i = 0; i < playerCount_; ++i)
@@ -955,6 +1013,16 @@ void Game::UpdateCollisions()
                 AddShake(0.7f);
                 healthPickup_.ForceSpawn(hit->Position());
                 ammoPickup_.ForceSpawn(hit->Position());
+            }
+
+            if (elite)
+            {
+                AddShockwave(hit->Position(), 90.0f, 0.45f, GOLD);
+                AddShake(0.25f);
+                if (combatRng_.Range(0.0f, 1.0f) < 0.5f)
+                    healthPickup_.ForceSpawn(hit->Position());
+                else
+                    ammoPickup_.ForceSpawn(hit->Position());
             }
 
             --zombiesAlive_;
@@ -1175,6 +1243,17 @@ int Game::AlivePlayerCount() const
     for (int i = 0; i < playerCount_; ++i)
     {
         if (players_[i].player.Alive())
+            ++alive;
+    }
+    return alive;
+}
+
+int Game::EliteZombiesAlive() const
+{
+    int alive = 0;
+    for (const Zombie &zombie : zombies_)
+    {
+        if (zombie.Alive() && zombie.Elite())
             ++alive;
     }
     return alive;
@@ -1582,6 +1661,7 @@ void Game::DrawScene()
 
     arena_.Draw(assets_.tilesheet);
     DrawBloodDecals();
+    arena_.DrawObstacles();
     DrawShockwaves();
 
     for (const Zombie &zombie : zombies_)

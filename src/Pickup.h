@@ -3,6 +3,8 @@
 #include "Rng.h"
 #include "raylib.h"
 
+#include <vector>
+
 class Pickup
 {
 public:
@@ -15,6 +17,8 @@ public:
     explicit Pickup(Kind kind);
 
     void SetTexture(Texture2D texture) { texture_ = texture; }
+    // Must be called before SetArena so new drops avoid arena cover.
+    void SetObstacles(const std::vector<Rectangle> *obstacles) { obstacles_ = obstacles; }
     void Reset();
     void SetArena(Rectangle arena, Rng &rng);
     void Spawn(Rng &rng);
@@ -39,6 +43,7 @@ private:
     Kind kind_;
     Texture2D texture_{};
     Rectangle arena_{};
+    const std::vector<Rectangle> *obstacles_ = nullptr;
     Vector2 position_{};
     int value_ = 0;
     bool spawned_ = false;

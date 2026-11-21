@@ -2,6 +2,8 @@
 
 #include "raylib.h"
 
+#include <vector>
+
 enum class ZombieType
 {
     Bloater = 0,
@@ -16,8 +18,10 @@ enum class ZombieType
 class Zombie
 {
 public:
+    // Bosses are never elite. Elites are tougher, faster, larger and worth
+    // triple score and scrap; they always drop a pickup.
     void Spawn(ZombieType type, Vector2 position, Texture2D texture, Texture2D bloodTexture,
-               float speed, int health);
+               float speed, int health, bool elite = false);
 
     // Returns true when this hit killed the zombie.
     bool Hit(int damage);
@@ -25,11 +29,15 @@ public:
     void SetFlash(float seconds) { flash_ = seconds; }
 
     bool Alive() const { return alive_; }
+    bool Elite() const { return elite_; }
     bool Ranged() const { return type_ == ZombieType::Spitter; }
     // Spitters return true when their next ranged attack is ready.
     bool TickAttack(float dt);
 
-    void Update(float dt, Vector2 playerPosition);
+    // Cover pushes the zombie out after movement; pass the arena rectangles.
+    void Update(float dt, Vector2 playerPosition,
+                const std::vector<Rectangle> *obstacles = nullptr);
+    void ResolveObstacles(const std::vector<Rectangle> &obstacles);
     void AddSpeed(float amount) { speed_ += amount; }
     void Draw() const;
 
@@ -37,10 +45,14 @@ public:
     Vector2 Position() const { return position_; }
     float Speed() const { return speed_; }
     float Scale() const { return scale_; }
+    float Radius() const;
     int Health() const { return health_; }
     int MaxHealth() const { return maxHealth_; }
     ZombieType Type() const { return type_; }
-    float ContactDamage() const { return ContactDamageValue(type_); }
+    float ContactDamage() const
+    {
+        return ContactDamageValue(type_) * (elite_ ? 1.5f : 1.0f);
+    }
 
     static constexpr float BaseSpeed(ZombieType type)
     {
@@ -111,28 +123,22 @@ public:
         }
     }
 
-    static constexpr int ScoreValue(ZombieType type)
+    static constexpr int ScoreValue(ZombieType type, bool elite = false)
     {
-        switch (type)
-        {
-        case ZombieType::Spitter:
-        case ZombieType::Sprinter:
-        case ZombieType::Exploder: return 15;
-        case ZombieType::Boss: return 100;
-        default: return 10;
-        }
+        const int base = (type == ZombieType::Spitter || type == ZombieType::Sprinter ||
+                          type == ZombieType::Exploder)
+                             ? 15
+                             : (type == ZombieType::Boss ? 100 : 10);
+        return base * (elite ? 3 : 1);
     }
 
-    static constexpr int ScrapValue(ZombieType type)
+    static constexpr int ScrapValue(ZombieType type, bool elite = false)
     {
-        switch (type)
-        {
-        case ZombieType::Spitter:
-        case ZombieType::Sprinter:
-        case ZombieType::Exploder: return 2;
-        case ZombieType::Boss: return 25;
-        default: return 1;
-        }
+        const int base = (type == ZombieType::Spitter || type == ZombieType::Sprinter ||
+                          type == ZombieType::Exploder)
+                             ? 2
+                             : (type == ZombieType::Boss ? 25 : 1);
+        return base * (elite ? 3 : 1);
     }
 
     static constexpr float ContactDamageValue(ZombieType type)
@@ -159,4 +165,5 @@ private:
     int health_ = 0;
     int maxHealth_ = 0;
     bool alive_ = false;
+    bool elite_ = false;
 };

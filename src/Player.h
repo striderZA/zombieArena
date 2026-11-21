@@ -2,16 +2,22 @@
 
 #include "raylib.h"
 
+#include <vector>
+
 class Player
 {
 public:
+    static constexpr float kBodyRadius = 20.0f;
+
     void SetTexture(Texture2D texture) { texture_ = texture; }
 
     void ResetStats();
     void Spawn(Rectangle arena, float tileSize, Vector2 offset = {0.0f, 0.0f});
 
     // moveInput components are -1, 0 or 1. mouseWorld aims the sprite.
-    void Update(float dt, Vector2 moveInput, Vector2 mouseWorld);
+    // When obstacles is non-null the player is pushed out of arena cover.
+    void Update(float dt, Vector2 moveInput, Vector2 mouseWorld,
+                const std::vector<Rectangle> *obstacles = nullptr);
 
     // Returns true when damage was actually applied (250 ms cooldown).
     bool TakeHit(double now, float damage = 10.0f);
@@ -41,6 +47,8 @@ private:
     static constexpr double kHitCooldown = 0.25; // seconds
     static constexpr float kSpeedUpgradeFactor = 1.10f;
     static constexpr float kHealthUpgrade = 10.0f;
+
+    void ClampToArena();
 
     Texture2D texture_{};
     Vector2 position_{};

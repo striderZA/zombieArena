@@ -1,5 +1,9 @@
 #include "Pickup.h"
 
+#include "ObstacleCollision.h"
+
+#include <cmath>
+
 Pickup::Pickup(Kind kind) : kind_(kind)
 {
     Reset();
@@ -29,8 +33,14 @@ void Pickup::Spawn(Rng &rng)
     const float spanX = arena_.width - inset * 2.0f;
     const float spanY = arena_.height - inset * 2.0f;
 
-    position_.x = minX + rng.Range(0.0f, spanX > 1.0f ? spanX : 1.0f);
-    position_.y = minY + rng.Range(0.0f, spanY > 1.0f ? spanY : 1.0f);
+    // Try a handful of spots so the drop does not land inside cover.
+    for (int attempt = 0; attempt < 32; ++attempt)
+    {
+        position_.x = minX + rng.Range(0.0f, spanX > 1.0f ? spanX : 1.0f);
+        position_.y = minY + rng.Range(0.0f, spanY > 1.0f ? spanY : 1.0f);
+        if (obstacles_ == nullptr || !CircleBlockedByObstacles(position_, 26.0f, *obstacles_))
+            break;
+    }
 
     secondsSinceSpawn_ = 0.0f;
     spawned_ = true;
@@ -39,6 +49,8 @@ void Pickup::Spawn(Rng &rng)
 void Pickup::ForceSpawn(Vector2 position)
 {
     position_ = position;
+    if (obstacles_ != nullptr)
+        ResolveCircleAgainstObstacles(position_, 26.0f, *obstacles_);
     secondsSinceSpawn_ = 0.0f;
     spawned_ = true;
 }

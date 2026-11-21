@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include "ObstacleCollision.h"
+
 #include <cmath>
 
 void Player::ResetStats()
@@ -19,12 +21,28 @@ void Player::Spawn(Rectangle arena, float tileSize, Vector2 offset)
                  arena.y + arena.height * 0.5f + offset.y};
 }
 
-void Player::Update(float dt, Vector2 moveInput, Vector2 mouseWorld)
+void Player::Update(float dt, Vector2 moveInput, Vector2 mouseWorld,
+                    const std::vector<Rectangle> *obstacles)
 {
     // Per-axis movement keeps the original diagonal speed (no normalization).
     position_.x += moveInput.x * speed_ * dt;
     position_.y += moveInput.y * speed_ * dt;
 
+    ClampToArena();
+
+    if (obstacles != nullptr)
+    {
+        ResolveCircleAgainstObstacles(position_, kBodyRadius, *obstacles);
+        ClampToArena();
+    }
+
+    // Aim from the player, not the screen center (the SFML build had this
+    // relative to the window, which only matched while centered on screen).
+    rotation_ = std::atan2(mouseWorld.y - position_.y, mouseWorld.x - position_.x) * RAD2DEG;
+}
+
+void Player::ClampToArena()
+{
     const float minX = arena_.x + tileSize_;
     const float minY = arena_.y + tileSize_;
     const float maxX = arena_.x + arena_.width - tileSize_;
@@ -38,10 +56,6 @@ void Player::Update(float dt, Vector2 moveInput, Vector2 mouseWorld)
         position_.y = minY;
     if (position_.y > maxY)
         position_.y = maxY;
-
-    // Aim from the player, not the screen center (the SFML build had this
-    // relative to the window, which only matched while centered on screen).
-    rotation_ = std::atan2(mouseWorld.y - position_.y, mouseWorld.x - position_.x) * RAD2DEG;
 }
 
 bool Player::TakeHit(double now, float damage)

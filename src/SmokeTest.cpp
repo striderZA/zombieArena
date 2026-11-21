@@ -1,6 +1,7 @@
 #include "SmokeTest.h"
 
 #include "Game.h"
+#include "ObstacleCollision.h"
 #include "Waves.h"
 #include "raylib.h"
 
@@ -184,6 +185,18 @@ int RunSmokeTest(Game &game, const std::string &screenshotDir, const GameOptions
     check.Check(game.State() == GameState::Playing, "choosing an upgrade starts the wave");
     check.Check(game.Wave() == 1, "wave counter starts at 1");
     check.Check(game.ZombiesAlive() == 5, "wave 1 spawns 5 zombies");
+    check.Check(game.ObstaclesActive() >= 2, "wave 1 has arena cover");
+    {
+        bool centerClear = true;
+        for (const Rectangle &rect : game.arena_.Obstacles())
+        {
+            const Vector2 center{game.ArenaSize() * 0.5f, game.ArenaSize() * 0.5f};
+            if (CircleOverlapsRect(center, 150.0f, rect))
+                centerClear = false;
+        }
+        check.Check(centerClear, "cover leaves the player spawn clear");
+        check.Check(game.EliteZombiesAlive() == 0, "wave 1 has no elites");
+    }
     check.Check(firstDraftId >= 0 && game.UpgradeStacks(firstDraftId) == 1,
                 "choosing a card records a stack");
     Redraw(game);
@@ -327,6 +340,18 @@ int RunSmokeTest(Game &game, const std::string &screenshotDir, const GameOptions
 
     check.Check(sawBullet, "firing creates in-flight bullets");
     check.Check(killedSomething, "at least one zombie was killed by gunfire");
+    {
+        bool resolved = true;
+        for (const Zombie &zombie : game.GetZombies())
+        {
+            if (zombie.Alive() &&
+                CircleBlockedByObstacles(zombie.Position(), zombie.Radius(), game.arena_.Obstacles()))
+            {
+                resolved = false;
+            }
+        }
+        check.Check(resolved, "zombies resolve out of arena cover");
+    }
     check.Check(static_cast<int>(game.PlayerHealth()) <= startedHealth, "player health is tracked");
     check.Check(game.State() != GameState::GameOver, "bot survived the first wave");
 
@@ -598,6 +623,8 @@ int RunSmokeTest(Game &game, const std::string &screenshotDir, const GameOptions
     check.Check(bossGame.State() == GameState::Playing && bossGame.Wave() == 5, "quick-start opens wave 5");
     check.Check(bossGame.ZombiesAlive() == WaveZombieCount(5, false), "wave 5 count matches the wave plan");
     check.Check(bossGame.HasBoss(), "wave 5 spawns a boss");
+    check.Check(bossGame.ObstaclesActive() >= 2, "wave 5 has arena cover");
+    check.Check(bossGame.EliteZombiesAlive() >= 1, "wave 5 includes an elite zombie");
     int spitters = 0;
     for (const Zombie &zombie : bossGame.GetZombies())
     {

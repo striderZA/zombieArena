@@ -87,6 +87,8 @@ public:
     int Score() const { return score_; }
     int HiScore() const { return hiScore_; }
     int ZombiesAlive() const { return zombiesAlive_; }
+    int EliteZombiesAlive() const;
+    int ObstaclesActive() const { return static_cast<int>(arena_.Obstacles().size()); }
     int BulletsInFlight() const;
     int PlayerCount() const { return playerCount_; }
     bool CoopEnabled() const { return playerCount_ > 1; }

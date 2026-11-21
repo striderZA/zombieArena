@@ -1,18 +1,22 @@
 #include "Zombie.h"
 
+#include "ObstacleCollision.h"
+
+#include <algorithm>
 #include <cmath>
 
 void Zombie::Spawn(ZombieType type, Vector2 position, Texture2D texture, Texture2D bloodTexture,
-                   float speed, int health)
+                   float speed, int health, bool elite)
 {
     type_ = type;
     position_ = position;
     texture_ = texture;
     bloodTexture_ = bloodTexture;
-    speed_ = speed;
-    health_ = health;
-    maxHealth_ = health;
-    scale_ = ScaleOf(type);
+    elite_ = elite && type != ZombieType::Boss;
+    speed_ = speed * (elite_ ? 1.15f : 1.0f);
+    health_ = elite_ ? health * 2 : health;
+    maxHealth_ = health_;
+    scale_ = ScaleOf(type) * (elite_ ? 1.25f : 1.0f);
     attackTimer_ = 1.2f;
     alive_ = true;
     rotation_ = 0.0f;
@@ -64,7 +68,8 @@ bool Zombie::TickAttack(float dt)
     return false;
 }
 
-void Zombie::Update(float dt, Vector2 playerPosition)
+void Zombie::Update(float dt, Vector2 playerPosition,
+                    const std::vector<Rectangle> *obstacles)
 {
     if (flash_ > 0.0f)
         flash_ = flash_ > dt ? flash_ - dt : 0.0f;
@@ -78,35 +83,52 @@ void Zombie::Update(float dt, Vector2 playerPosition)
     const float dy = playerPosition.y - position_.y;
     const float distance = std::sqrt(dx * dx + dy * dy);
 
+    auto move = [&](float moveX, float moveY) {
+        position_.x += moveX;
+        position_.y += moveY;
+        if (obstacles != nullptr)
+            ResolveCircleAgainstObstacles(position_, Radius(), *obstacles);
+    };
+
     if (Ranged())
     {
         // Spitters keep their distance instead of hugging the player.
         if (distance > 250.0f && distance > 0.001f)
-        {
-            position_.x += dx / distance * speed_ * dt;
-            position_.y += dy / distance * speed_ * dt;
-        }
+            move(dx / distance * speed_ * dt, dy / distance * speed_ * dt);
         else if (distance < 150.0f && distance > 0.001f)
-        {
-            position_.x -= dx / distance * speed_ * dt;
-            position_.y -= dy / distance * speed_ * dt;
-        }
+            move(-dx / distance * speed_ * dt, -dy / distance * speed_ * dt);
     }
     else
     {
         // Per-axis chase, as in the original: diagonal movement is faster.
+        // Each axis resolves separately so cover makes zombies slide around
+        // its edges instead of stalling against the first wall.
+        const float step = speed_ * dt;
         if (playerPosition.x > position_.x)
-            position_.x += speed_ * dt;
+            move(step, 0.0f);
         else if (playerPosition.x < position_.x)
-            position_.x -= speed_ * dt;
+            move(-step, 0.0f);
 
         if (playerPosition.y > position_.y)
-            position_.y += speed_ * dt;
+            move(0.0f, step);
         else if (playerPosition.y < position_.y)
-            position_.y -= speed_ * dt;
+            move(0.0f, -step);
     }
 
     rotation_ = std::atan2(playerPosition.y - position_.y, playerPosition.x - position_.x) * RAD2DEG;
+}
+
+void Zombie::ResolveObstacles(const std::vector<Rectangle> &obstacles)
+{
+    if (!alive_)
+        return;
+    ResolveCircleAgainstObstacles(position_, Radius(), obstacles);
+}
+
+float Zombie::Radius() const
+{
+    const float width = texture_.id != 0 ? static_cast<float>(texture_.width) : 50.0f;
+    return width * scale_ * 0.4f;
 }
 
 Rectangle Zombie::Rect() const
@@ -130,11 +152,20 @@ void Zombie::Draw() const
     if (alive_ && type_ == ZombieType::Boss)
         DrawCircleLinesV(position_, 42.0f * scale_, Fade(RED, 0.35f));
 
+    if (alive_ && elite_)
+    {
+        const float pulse = 0.65f + 0.35f * std::sin(static_cast<float>(GetTime()) * 6.0f);
+        DrawCircleLinesV(position_, Radius() + 6.0f, Fade(GOLD, 0.75f * pulse));
+        DrawCircleLinesV(position_, Radius() + 12.0f, Fade(GOLD, 0.30f * pulse));
+    }
+
     const Rectangle source{0.0f, 0.0f, static_cast<float>(texture_.width), static_cast<float>(texture_.height)};
     const float size = scale_;
     const Rectangle dest{position_.x, position_.y, source.width * size, source.height * size};
     const Vector2 origin{source.width * size * 0.5f, source.height * size * 0.5f};
     Color tint = alive_ ? Tint(type_) : WHITE;
+    if (alive_ && elite_)
+        tint = Color{255, 224, 140, 255};
     if (alive_ && flash_ > 0.0f)
         tint = Color{255, 120, 120, 255};
     DrawTexturePro(texture_, source, dest, origin, rotation_, tint);
