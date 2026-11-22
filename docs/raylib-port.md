@@ -104,6 +104,7 @@ keyboard/mouse and player 2 uses the gamepad.
   boss health bar, large hitbox, heavy knockback resistance and bonus rewards.
   From wave 4 each wave also includes elite zombies: 2x health, 1.15x speed,
   1.25x size, 1.5x contact damage, triple score/scrap and a guaranteed pickup.
+  Regular zombies gain 1 HP per 4 waves; the boss scales separately.
 - **Arena cover** — two to six static crates and barriers per wave, generated
   deterministically from the run seed. Cover blocks players, zombies, bullets
   and spitter projectiles; the player spawn stays clear. Zombies slide around
@@ -187,13 +188,14 @@ ammo/health values, 250 ms hit cooldown, 1000 px bullet range).
 
 ## Verification
 
-`ctest` result: 2/2 suites pass — **712 logic assertions** and **102 integration
+`ctest` result: 2/2 suites pass — **719 logic assertions** and **107 integration
 checks**. The smoke run includes a five-zombie wave-1 clear (score 50), wave-2
 death/restart, settings/keybinding and bunker/SMG purchase paths, a two-player
-co-op wave and double-down game over, and a wave-5 boss with spitters, live
-projectiles, arena cover and an elite zombie, plus a 0.1 s / 100 px swept
-bullet hit that endpoint-only
-collision misses. Windowed and fullscreen launches were also run directly.
+co-op wave and double-down game over, a wave-5 boss with spitters, live
+projectiles, arena cover and an elite zombie, a last-kill exploder death that
+keeps Game Over instead of opening the draft, plus a 0.1 s / 100 px swept
+bullet hit that endpoint-only collision misses. Windowed and fullscreen launches
+were also run directly.
 
 Gamepad input paths are exercised through scripted player-2 inputs; no physical
 gamepad was available in this environment.
