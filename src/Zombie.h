@@ -84,6 +84,15 @@ public:
         return 1;
     }
 
+    // Regular zombies gain +1 health every 4 waves; bosses scale with wave.
+    static constexpr int SpawnHealth(ZombieType type, int wave)
+    {
+        if (type == ZombieType::Boss)
+            return BaseHealth(type) + wave * 8;
+        const int bonus = wave > 1 ? (wave - 1) / 4 : 0;
+        return BaseHealth(type) + bonus;
+    }
+
     static constexpr float WaveSpeedBonus(ZombieType type)
     {
         switch (type)

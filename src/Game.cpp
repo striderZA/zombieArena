@@ -592,7 +592,7 @@ void Game::BeginWave(int wave)
         const float variance = spawnRng_.Range(0.91f, 1.0f);
         const float speed = Zombie::BaseSpeed(type) * variance +
                             Zombie::WaveSpeedBonus(type) * 0.1f * static_cast<float>(wave_);
-        const int health = Zombie::BaseHealth(type) + (type == ZombieType::Boss ? wave_ * 8 : 0);
+        const int health = Zombie::SpawnHealth(type, wave_);
 
         Zombie zombie;
         zombie.Spawn(type, {x, y}, ZombieTexture(type), assets_.blood, speed, health, elite);

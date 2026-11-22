@@ -361,6 +361,13 @@ void TestSpecialZombies()
     CHECK(Zombie::BaseSpeed(ZombieType::Exploder) == 55.0f);
     CHECK(Zombie::BaseSpeed(ZombieType::Boss) == 30.0f);
     CHECK(Zombie::BaseHealth(ZombieType::Boss) == 30);
+    CHECK(Zombie::SpawnHealth(ZombieType::Chaser, 1) == 1);
+    CHECK(Zombie::SpawnHealth(ZombieType::Chaser, 4) == 1);
+    CHECK(Zombie::SpawnHealth(ZombieType::Chaser, 5) == 2);
+    CHECK(Zombie::SpawnHealth(ZombieType::Chaser, 9) == 3);
+    CHECK(Zombie::SpawnHealth(ZombieType::Bloater, 9) == 7);
+    CHECK(Zombie::SpawnHealth(ZombieType::Boss, 5) == 70);
+    CHECK(Zombie::SpawnHealth(ZombieType::Boss, 10) == 110);
     CHECK_NEAR(Zombie::ScaleOf(ZombieType::Boss), 2.2f, 0.001f);
     CHECK_NEAR(Zombie::ScaleOf(ZombieType::Sprinter), 0.85f, 0.001f);
     CHECK(Zombie::ScoreValue(ZombieType::Boss) == 100);
