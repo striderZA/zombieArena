@@ -609,6 +609,58 @@ int RunSmokeTest(Game &game, const std::string &screenshotDir, const GameOptions
 
     coopGame.Shutdown();
 
+    // ------------------------------------- last-kill exploder death precedence
+    GameOptions deathOptions = baseOptions;
+    deathOptions.settings.coop = false;
+    deathOptions.gamepadAvailable = false;
+    deathOptions.startWave = 1;
+    deathOptions.profilePath = screenshotDir + "/death_profile.txt";
+    deathOptions.settingsPath = screenshotDir + "/death_settings.txt";
+    std::remove(deathOptions.profilePath.c_str());
+    std::remove(deathOptions.settingsPath.c_str());
+
+    Game deathGame;
+    const bool deathReady = deathGame.Init(deathOptions);
+    check.Check(deathReady && deathGame.State() == GameState::Playing,
+                "last-kill death game starts on wave 1");
+
+    if (deathReady && deathGame.State() == GameState::Playing)
+    {
+        const Vector2 player = deathGame.GetPlayer(0).Center();
+        const Vector2 exploderPosition{player.x + 90.0f, player.y};
+
+        deathGame.zombies_.clear();
+        Zombie exploder;
+        exploder.Spawn(ZombieType::Exploder, exploderPosition,
+                       deathGame.ZombieTexture(ZombieType::Exploder), deathGame.assets_.blood,
+                       Zombie::BaseSpeed(ZombieType::Exploder), 0);
+        deathGame.zombies_.push_back(exploder);
+        deathGame.zombiesAlive_ = 1;
+        deathGame.totalZombies_ = 1;
+
+        deathGame.players_[0].player.TakeHit(deathGame.gameTime_ - 1.0, 90.0f);
+        check.Check(static_cast<int>(deathGame.PlayerHealth()) == 10,
+                    "player is at 10 health for the blast test");
+
+        InputState idleDeath;
+        for (int step = 0; step < 30 && deathGame.State() == GameState::Playing; ++step)
+        {
+            InputState shot = PlayerOneInput(Game::WorldToScreen(exploderPosition, deathGame.camera_));
+            shot.players[0].fire = true;
+            deathGame.Update(kDt, shot);
+        }
+
+        check.Check(deathGame.State() == GameState::GameOver,
+                    "exploder blast on the last kill ends the run");
+        check.Check(deathGame.ZombiesAlive() == 0, "the last zombie is still counted dead");
+
+        deathGame.Update(kDt, idleDeath);
+        check.Check(deathGame.State() == GameState::GameOver,
+                    "the wave-clear draft does not override game over");
+    }
+
+    deathGame.Shutdown();
+
     // ---------------------------------------------------------------- boss
     GameOptions bossOptions = baseOptions;
     bossOptions.settings.coop = false;

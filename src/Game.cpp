@@ -1026,6 +1026,8 @@ void Game::UpdateCollisions()
             }
 
             --zombiesAlive_;
+            if (state_ != GameState::Playing)
+                return;
             if (zombiesAlive_ <= 0)
                 EnterLevelingUp();
         }
@@ -1212,6 +1214,9 @@ void Game::UpdateJuice(float dt)
 
 void Game::EnterLevelingUp()
 {
+    if (state_ != GameState::Playing)
+        return;
+
     AwardScrap(5 + wave_ * 2);
     state_ = GameState::LevelingUp;
     GenerateDraft();
