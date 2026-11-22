@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: ""
+last_updated: "2026-11-22"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -49,7 +49,123 @@ last_updated: ""
 # Attribute fields: any key stats that could appear in another GDD
 #   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: bloater
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: 5
+    base_speed: 40
+    wave_speed_bonus: 50
+    scale: 1.0
+    contact_damage: 10
+    score: 10
+    scrap: 1
+    added: 2026-11-21
+    revised: ""
+
+  - name: chaser
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: 1
+    base_speed: 70
+    wave_speed_bonus: 70
+    scale: 1.0
+    contact_damage: 10
+    score: 10
+    scrap: 1
+    added: 2026-11-21
+    revised: ""
+
+  - name: crawler
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: 3
+    base_speed: 20
+    wave_speed_bonus: 30
+    scale: 1.0
+    contact_damage: 10
+    score: 10
+    scrap: 1
+    added: 2026-11-21
+    revised: ""
+
+  - name: spitter
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: 2
+    base_speed: 30
+    wave_speed_bonus: 15
+    scale: 0.95
+    contact_damage: 10
+    score: 15
+    scrap: 2
+    attack_range: 600
+    keep_distance: [350, 500]
+    behavior: "advance while >500; retreat while <350; hold 350-500; line of sight only; leads by projectile flight time; clamped to the playable rectangle"
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: sprinter
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: 1
+    base_speed: 260
+    wave_speed_bonus: 30
+    scale: 0.85
+    contact_damage: 10
+    score: 15
+    scrap: 2
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: exploder
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: 3
+    base_speed: 55
+    wave_speed_bonus: 15
+    scale: 1.10
+    contact_damage: 15
+    score: 15
+    scrap: 2
+    death_blast: {damage: 20, radius: 110, fuse: 0.35}
+    added: 2026-11-21
+    revised: ""
+
+  - name: boss
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    base_health: "40 + 18 * wave + 10 * floor((wave - 1) * (wave - 1) / 12)"
+    base_speed: 90
+    wave_speed_bonus: 30
+    scale: 2.20
+    contact_damage: 20
+    score: "100 + 50 * wave"
+    scrap: "25 + 5 * wave"
+    cadence_waves: 5
+    added: 2026-11-21
+    revised: "2026-11-22"
 
 # Example (remove when first real entry is added):
 #
@@ -78,7 +194,55 @@ entities: []
 # Attribute fields: value_gold, weight, stackable, category, and any stat
 #   modifiers that another system (e.g., economy, crafting) might reference.
 
-items: []
+items:
+  - name: health_pickup
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/upgrade-system.md
+      - design/gdd/combat-system.md
+    value_health: 50
+    category: consumable
+    stackable: false
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: ammo_pickup
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/upgrade-system.md
+      - design/gdd/combat-system.md
+    value_ammo: 16
+    category: consumable
+    stackable: false
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: boss_cache
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    category: consumable
+    stackable: false
+    notes: "Composite token: health 50+25*FM (capped) and ammo round((16+8*S)*share)."
+    added: 2026-11-22
+    revised: ""
+
+  - name: smg_blueprint
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+    value_scrap: 250
+    category: unlock
+    stackable: false
+    added: 2026-11-21
+    revised: ""
 
 # Example:
 #
@@ -107,7 +271,268 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: bullet_damage
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      - design/gdd/upgrade-system.md
+    variables:
+      - hollow_point_stacks
+      - weapon_tuning_level
+    output_range: [1, 7]
+    expression: "1 + hollow_point_stacks + weapon_tuning_level"
+    added: 2026-11-21
+    revised: ""
+
+  - name: wave_zombie_count
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+    variables:
+      - wave
+      - coop
+    output_range: [5, 128]
+    expression: "5 + 2 * (max(1, wave) - 1) + (coop ? 3 + floor(1.5 * max(1, wave)) : 0); if wave >= 5 and wave % 5 == 0: count + 1"
+    notes: "Formula is unbounded; live entities are capped at 96 solo / 128 co-op with a spawn queue."
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: regular_enemy_health
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+    variables:
+      - base_health
+      - wave
+    output_range: [1, 75]
+    expression: "base_health + floor((wave - 1) * (wave - 1) / 12)"
+    notes: "Formula is unbounded; 75 is a wave-30 bloater. Elites double the result; the boss uses its own formula. Listed HP is effective HP under the health <= 0 death rule."
+    added: 2026-11-22
+    revised: "2026-11-22"
+
+  - name: elite_chance
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+    variables:
+      - wave
+    output_range: [0, 0.25]
+    expression: "min(0.05 + 0.015 * wave, 0.25) for wave >= 4"
+    notes: "The first non-boss zombie in each wave from wave 4 is always elite."
+    added: 2026-11-21
+    revised: ""
+
+  - name: boss_health
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    variables:
+      - wave
+    output_range: [140, 1280]
+    expression: "40 + 18 * wave + 10 * floor((wave - 1) * (wave - 1) / 12)"
+    notes: "140 at wave 5, 280 at wave 10, 700 at wave 20, 1280 at wave 30; quadratic term frozen after wave 30, +30/wave thereafter. Two phase gates at 60%/30% HP (2.0 s invulnerable, 2 adds); target TTK 10-20 s."
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: kill_scrap
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+      - design/gdd/combat-system.md
+    variables:
+      - scrap_value
+      - elite
+      - wave
+      - boss
+    output_range: [1, 175]
+    expression: "max(1, round((boss ? 25 + 5 * wave : scrap_value) * (elite ? 3 : 1)))"
+    notes: "175 at wave 30; unbounded in endless. Magnet and depth multipliers are applied once by bank_multiplier at FinishRun."
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: wave_clear_scrap
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+      - design/gdd/wave-system.md
+    variables:
+      - wave
+    output_range: [7, 65]
+    expression: "max(1, 5 + 2 * wave)"
+    notes: "65 at wave 30; unbounded in endless. Magnet and depth multipliers are applied once by bank_multiplier at FinishRun."
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: bank_multiplier
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+      - design/gdd/combat-system.md
+    variables:
+      - scrap_run
+      - waves_cleared
+      - scrap_magnet_level
+    output_range: [0, 1000000000]
+    expression: "round(scrap_run * (1 + 0.2 * scrap_magnet_level) * (1 + 0.03 * min(waves_cleared, 30)))"
+    notes: "Applied once at FinishRun; up to 2.0x Magnet and 1.9x depth at wave 30, clamped at 1e9."
+    added: 2026-11-22
+    revised: "2026-11-22"
+
+  - name: meta_upgrade_cost
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+    variables:
+      - level
+      - base_cost
+      - cost_step
+      - max_level
+    output_range: [-1, 250]
+    expression: "level >= max_level ? -1 : base_cost + cost_step * level"
+    added: 2026-11-21
+    revised: ""
+
+  - name: salvage_rounds
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    variables: [max_hp]
+    output_range: [1, 137]
+    expression: "max(1, round_half_up(0.75 * max_hp / 7))"
+    notes: "max_hp is spawn max HP; waves 1-30. Shotgun uses salvage_shells."
+    added: 2026-11-22
+    revised: ""
+
+  - name: salvage_shells
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    variables: [salvage_rounds]
+    output_range: [1, 27]
+    expression: "max(1, floor(salvage_rounds * 0.20))"
+    notes: "Shotgun only; integer form floor(salvage_rounds / 5)."
+    added: 2026-11-22
+    revised: ""
+
+  - name: ammo_pickup_value
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/upgrade-system.md
+      - design/gdd/combat-system.md
+    variables: [scavenger_stacks, ammo_share]
+    output_range: [3, 40]
+    expression: "round_half_up((16 + 8 * scavenger_stacks) * ammo_share)"
+    notes: "Elite token and boss-cache ammo; shares 0.20 / 0.50 / 1.00."
+    added: 2026-11-22
+    revised: ""
+
+  - name: health_pickup_value
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/upgrade-system.md
+    variables: [field_medic_stacks]
+    output_range: [50, 125]
+    expression: "50 + 25 * field_medic_stacks"
+    notes: "Grant is capped by the collector's missing health."
+    added: 2026-11-22
+    revised: ""
+
+  - name: live_seconds
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/upgrade-system.md
+    variables: [stacks]
+    output_range: [6.0, 7.8]
+    expression: "6 + 0.6 * stacks"
+    notes: "Field Medic for health; Scavenger for ammo."
+    added: 2026-11-22
+    revised: ""
+
+  - name: wait_seconds
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/upgrade-system.md
+    variables: [stacks]
+    output_range: [4.2, 6.0]
+    expression: "max(1, 6 - 0.6 * stacks)"
+    notes: "Clamps at 1.0 above 8 stacks."
+    added: 2026-11-22
+    revised: ""
+
+  - name: wave_round_need
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    variables: [hp_i, roster_count]
+    output_range: [15, 1695]
+    expression: "sum(3 * ceil(hp_i / 21))"
+    notes: "Wave-start roster; includes elites and boss; excludes phase adds."
+    added: 2026-11-22
+    revised: ""
+
+  - name: ambient_ammo_value
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    variables: [wave, scavenger_stacks, wave_round_need]
+    output_range: [16, 231]
+    expression: "wave < 20 ? 16 + 8*S : max(16 + 8*S, round_half_up(0.15 * wave_round_need))"
+    notes: "Raw before weapon share; w30 expected 165."
+    added: 2026-11-22
+    revised: ""
+
+  - name: reserve_cap
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    variables: [weapon]
+    output_range: [40, 240]
+    expression: "weapon == shotgun ? 40 : 240"
+    notes: "Rifle and SMG 240; shotgun 40."
+    added: 2026-11-22
+    revised: ""
+
+  - name: collection_distance
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    variables: [player_body_radius, token_radius]
+    output_range: [46, 46]
+    expression: "20 + 26"
+    notes: "Squared threshold 2116 px^2."
+    added: 2026-11-22
+    revised: ""
 
 # Example:
 #
@@ -140,7 +565,324 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: player_hit_cooldown
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+    value: 0.25
+    unit: seconds
+    added: 2026-11-21
+    revised: ""
+
+  - name: player_base_health
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      - design/gdd/economy-system.md
+    value: 100
+    unit: health
+    added: 2026-11-21
+    revised: ""
+
+  - name: player_base_speed
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      - design/gdd/economy-system.md
+    value: 200
+    unit: pixels_per_second
+    notes: "Base move speed in every direction; input is normalized. Combined Shoes 5 + Swift 5 would be 373.4 px/s but is capped at 300 px/s."
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: arena_base_size
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+    value: 650
+    unit: pixels
+    notes: "Arena side = min(650 * (1 + 0.1 * wave), 1800)."
+    added: 2026-11-21
+    revised: ""
+
+  - name: boss_cadence
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    value: 5
+    unit: waves
+    added: 2026-11-21
+    revised: ""
+
+  - name: draft_size
+    status: active
+    source: design/gdd/upgrade-system.md
+    referenced_by:
+      - design/gdd/upgrade-system.md
+      - design/gdd/wave-system.md
+    value: 3
+    unit: cards
+    added: 2026-11-21
+    revised: ""
+
+  - name: bunker_total_cost
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+    value: 3610
+    unit: scrap
+    notes: "Sum of every permanent upgrade, the SMG blueprint, and the 500-scrap Veteran Badge capstone."
+    added: 2026-11-21
+    revised: "2026-11-22"
+
+  - name: player_speed_cap
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      - design/gdd/economy-system.md
+    value: 300
+    unit: pixels_per_second
+    added: 2026-11-22
+    revised: ""
+
+  - name: bullet_pool
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      - design/gdd/wave-system.md
+    value: 160
+    unit: bullets
+    added: 2026-11-22
+    revised: ""
+
+  - name: victory_bonus
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+      - design/gdd/wave-system.md
+    value: 5000
+    unit: score
+    added: 2026-11-22
+    revised: ""
+
+  - name: first_run_stipend
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+    value: 10
+    unit: scrap
+    added: 2026-11-22
+    revised: ""
+
+  - name: veteran_badge_cost
+    status: active
+    source: design/gdd/economy-system.md
+    referenced_by:
+      - design/gdd/economy-system.md
+    value: 500
+    unit: scrap
+    added: 2026-11-22
+    revised: ""
+
+  - name: expected_dps_cap
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+    value: 200
+    unit: damage_per_second
+    notes: "Median wave-indexed reference build; the max SMG+Bullet Storm build is ~418 and is the power-trip ceiling."
+    added: 2026-11-22
+    revised: ""
+
+  - name: boss_phase_invuln
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    value: 2.0
+    unit: seconds
+    added: 2026-11-22
+    revised: ""
+
+  - name: boss_phase_adds
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    value: 2
+    unit: zombies
+    added: 2026-11-22
+    revised: ""
+
+  - name: boss_phase_speed_bonus
+    status: active
+    source: design/gdd/wave-system.md
+    referenced_by:
+      - design/gdd/wave-system.md
+      - design/gdd/combat-system.md
+    value: 1.20
+    unit: multiplier
+    notes: "Applied after the boss's second phase gate."
+    added: 2026-11-22
+    revised: ""
+
+  - name: salvage_coefficient
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    value: 0.75
+    unit: multiplier
+    added: 2026-11-22
+    revised: ""
+
+  - name: salvage_divisor
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    value: 7
+    unit: hp_per_round
+    added: 2026-11-22
+    revised: ""
+
+  - name: late_ammo_floor_coefficient
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 0.15
+    unit: fraction
+    added: 2026-11-22
+    revised: ""
+
+  - name: reserve_cap_rifle_smg
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    value: 240
+    unit: rounds
+    added: 2026-11-22
+    revised: ""
+
+  - name: reserve_cap_shotgun
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    value: 40
+    unit: shells
+    added: 2026-11-22
+    revised: ""
+
+  - name: pickup_token_radius
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    value: 26
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
+
+  - name: pickup_collection_distance
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/combat-system.md
+    value: 46
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
+
+  - name: ambient_band_min
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 300
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
+
+  - name: ambient_band_max
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 700
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
+
+  - name: pair_separation
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 0.35
+    unit: arena_fraction
+    added: 2026-11-22
+    revised: ""
+
+  - name: pickup_cover_clearance
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 60
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
+
+  - name: pickup_player_clearance
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 180
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
+
+  - name: pickup_edge_spacing
+    status: active
+    source: design/gdd/pickups.md
+    referenced_by:
+      - design/gdd/pickups.md
+      - design/gdd/wave-system.md
+    value: 40
+    unit: pixels
+    added: 2026-11-22
+    revised: ""
 
 # Example:
 #
